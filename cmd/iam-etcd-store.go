@@ -35,7 +35,7 @@ import (
 	iampolicy "github.com/minio/minio/pkg/iam/policy"
 	"github.com/minio/minio/pkg/kms"
 	"github.com/minio/minio/pkg/madmin"
-	etcd "go.etcd.io/etcd/clientv3"
+	etcd "go.etcd.io/etcd/client/v3"
 	"go.etcd.io/etcd/mvcc/mvccpb"
 )
 

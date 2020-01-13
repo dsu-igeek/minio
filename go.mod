@@ -3,11 +3,10 @@ module github.com/minio/minio
 go 1.16
 
 require (
-	cloud.google.com/go v0.39.0
+	cloud.google.com/go/storage v1.6.0
 	git.apache.org/thrift.git v0.13.0
 	github.com/Azure/azure-pipeline-go v0.2.2
 	github.com/Azure/azure-storage-blob-go v0.10.0
-	github.com/Azure/go-autorest/autorest/adal v0.9.1 // indirect
 	github.com/Shopify/sarama v1.27.2
 	github.com/VividCortex/ewma v1.1.1
 	github.com/alecthomas/participle v0.2.1
@@ -32,7 +31,7 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/jcmturner/gokrb5/v8 v8.4.2
-	github.com/json-iterator/go v1.1.10
+	github.com/json-iterator/go v1.1.11
 	github.com/klauspost/compress v1.11.12
 	github.com/klauspost/cpuid/v2 v2.0.4
 	github.com/klauspost/pgzip v1.2.5
@@ -64,7 +63,7 @@ require (
 	github.com/philhofer/fwd v1.1.1
 	github.com/pierrec/lz4 v2.5.2+incompatible
 	github.com/pkg/errors v0.9.1
-	github.com/prometheus/client_golang v1.8.0
+	github.com/prometheus/client_golang v1.11.0
 	github.com/prometheus/client_model v0.2.0
 	github.com/prometheus/procfs v0.6.0
 	github.com/rjeczalik/notify v0.9.2
@@ -77,15 +76,33 @@ require (
 	github.com/tidwall/sjson v1.0.4
 	github.com/tinylib/msgp v1.1.3
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
+	github.com/vmware-tanzu/astrolabe v0.0.0-00010101000000-000000000000
 	github.com/willf/bitset v1.1.11 // indirect
 	github.com/willf/bloom v2.0.3+incompatible
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
-	go.etcd.io/etcd v0.0.0-20201125193152-8a03d2e9614b
-	go.uber.org/zap v1.13.0
+	go.etcd.io/etcd v0.5.0-alpha.5.0.20200910180754-dd1b699fc489
+	go.etcd.io/etcd/client/v3 v3.5.1
+	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc
-	golang.org/x/net v0.0.0-20210226172049-e18ecbb05110
-	golang.org/x/sys v0.0.0-20210225134936-a50acf3fe073
-	golang.org/x/tools v0.1.0 // indirect
-	google.golang.org/api v0.5.0
-	gopkg.in/yaml.v2 v2.3.0
+	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
+	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
+	google.golang.org/api v0.20.0
+	gopkg.in/yaml.v2 v2.4.0
 )
+
+// Added for go1.13 migration https://github.com/golang/go/issues/32805
+replace github.com/gorilla/rpc v1.2.0+incompatible => github.com/gorilla/rpc v1.2.0
+
+// Allow this for offline builds
+replace github.com/eapache/go-xerial-snappy => github.com/eapache/go-xerial-snappy v0.0.0-20180814174437-776d5712da21
+
+replace github.com/eapache/queue => github.com/eapache/queue v1.1.0
+
+replace github.com/mattn/go-runewidth => github.com/mattn/go-runewidth v0.0.4
+
+replace github.com/mitchellh/mapstructure => github.com/mitchellh/mapstructure v1.1.2
+
+// Version 1.2.0 adds support for go modules
+replace github.com/hashicorp/vault => github.com/hashicorp/vault v1.2.0-beta2
+
+replace github.com/vmware-tanzu/astrolabe => /home/dsmithuchida/gopath/src/github.com/vmware-tanzu/astrolabe
