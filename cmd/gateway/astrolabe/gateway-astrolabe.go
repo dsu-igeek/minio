@@ -6,7 +6,13 @@ import (
 	"github.com/minio/minio/cmd"
 	minio "github.com/minio/minio/cmd"
 	"github.com/minio/minio/pkg/auth"
+	"github.com/minio/minio/pkg/bucket/policy"
+	"github.com/minio/minio/pkg/bucket/policy/condition"
+	"github.com/minio/minio/pkg/madmin"
+	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
+	"io"
+	"net/http"
 
 	"github.com/vmware-tanzu/astrolabe/pkg/server"
 )
@@ -90,7 +96,7 @@ func (this *Astrolabe) Name() string {
 
 // NewGatewayLayer returns a new  ObjectLayer.
 func (this *Astrolabe) NewGatewayLayer(creds auth.Credentials) (cmd.ObjectLayer, error) {
-	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, "")
+	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, nil, logrus.New())
 	return astrolabeObjects {
 		pem: dpem,
 	}, nil
@@ -111,14 +117,14 @@ func (this astrolabeObjects) Shutdown(context context.Context) error {
 	return nil
 }
 
-func (this astrolabeObjects) StorageInfo(context context.Context) (si minio.StorageInfo) {
-	si.Backend.Type = minio.BackendGateway
+func (this astrolabeObjects) StorageInfo(context context.Context) (si minio.StorageInfo, errs []error) {
+	si.Backend.Type = madmin.Gateway
 	si.Backend.GatewayOnline = true		// Astrolabe may be talking to a number of different backends, so we won't track
 										// those individually
-	return si
+	return
 }
 
-func (this astrolabeObjects) MakeBucketWithLocation(ctx context.Context, bucket string, location string) error {
+func (this astrolabeObjects) MakeBucketWithLocation(ctx context.Context, bucket string, opts minio.BucketOptions) error {
 	panic("implement me")
 }
 
@@ -142,4 +148,163 @@ func (this astrolabeObjects) ListBuckets(ctx context.Context) (buckets []cmd.Buc
 func bucketInfoForEntityManager(petm astrolabe.ProtectedEntityTypeManager) (bucketInfo cmd.BucketInfo) {
 	bucketInfo.Name = petm.GetTypeName()
 	return
+}
+
+func (a astrolabeObjects) DeleteBucket(ctx context.Context, bucket string, forceDelete bool) error {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) ListObjects(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (result cmd.ListObjectsInfo, err error) {
+	panic("implement me")
+}
+
+func (this astrolabeObjects) ListObjectsV2(ctx context.Context, bucket, prefix, continuationToken, delimiter string, maxKeys int, fetchOwner bool, startAfter string) (result cmd.ListObjectsV2Info, err error) {
+	petm := this.pem.GetProtectedEntityTypeManager(bucket)
+	peids, err := petm.GetProtectedEntities(ctx)
+	if err != nil {
+
+	}
+	for _, curPEID := range peids {
+		result.Objects = append(result.Objects, minio.ObjectInfo {
+			Name: curPEID.GetID(),
+		})
+		result.Objects = append(result.Objects, minio.ObjectInfo {
+			Name: curPEID.GetID() + ".md",
+		})
+		result.Objects = append(result.Objects, minio.ObjectInfo {
+			Name: curPEID.GetID() + ".zip",
+		})
+	}
+	return
+}
+
+func (a astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object string, rs *cmd.HTTPRangeSpec, h http.Header, lockType cmd.LockType, opts cmd.ObjectOptions) (reader *cmd.GetObjectReader, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts cmd.ObjectOptions) (err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) GetObjectInfo(ctx context.Context, bucket, object string, opts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) PutObject(ctx context.Context, bucket, object string, data *cmd.PutObjReader, opts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) CopyObject(ctx context.Context, srcBucket, srcObject, destBucket, destObject string, srcInfo cmd.ObjectInfo, srcOpts, dstOpts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) DeleteObject(ctx context.Context, bucket, object string, opts minio.ObjectOptions) (minio.ObjectInfo, error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) DeleteObjects(ctx context.Context, bucket string, objects []minio.ObjectToDelete, opts minio.ObjectOptions) ([]minio.DeletedObject, []error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) ListMultipartUploads(ctx context.Context, bucket, prefix, keyMarker, uploadIDMarker, delimiter string, maxUploads int) (result cmd.ListMultipartsInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) NewMultipartUpload(ctx context.Context, bucket, object string, opts cmd.ObjectOptions) (uploadID string, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) CopyObjectPart(ctx context.Context, srcBucket, srcObject, destBucket, destObject string, uploadID string, partID int,
+	startOffset int64, length int64, srcInfo cmd.ObjectInfo, srcOpts, dstOpts cmd.ObjectOptions) (info cmd.PartInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) PutObjectPart(ctx context.Context, bucket, object, uploadID string, partID int, data *cmd.PutObjReader, opts cmd.ObjectOptions) (info cmd.PartInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) ListObjectParts(ctx context.Context, bucket, object, uploadID string, partNumberMarker int, maxParts int, opts cmd.ObjectOptions) (result cmd.ListPartsInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) AbortMultipartUpload(ctx context.Context, bucket, object, uploadID string, opts minio.ObjectOptions) error {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) CompleteMultipartUpload(ctx context.Context, bucket, object, uploadID string, uploadedParts []cmd.CompletePart, opts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) ReloadFormat(ctx context.Context, dryRun bool) error {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) HealFormat(ctx context.Context, dryRun bool) (madmin.HealResultItem, error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) HealBucket(ctx context.Context, bucket string, opts madmin.HealOpts) (madmin.HealResultItem, error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) HealObject(ctx context.Context, bucket, object, versionID string, opts madmin.HealOpts) (madmin.HealResultItem, error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) HealObjects(ctx context.Context, bucket, prefix string, opts madmin.HealOpts, healObjectFn minio.HealObjectFn) error {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) ListBucketsHeal(ctx context.Context) (buckets []cmd.BucketInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) ListObjectsHeal(ctx context.Context, bucket, prefix, versionID string, opts minio.ObjectOptions) (result cmd.ListObjectsInfo, err error) {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) SetBucketPolicy(context.Context, string, *policy.Policy) error {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) GetBucketPolicy(ctx context.Context, bucket string) (*policy.Policy, error) {
+	return &policy.Policy{
+		Version: policy.DefaultVersion,
+		Statements: []policy.Statement{
+			policy.NewStatement(
+				policy.Allow,
+				policy.NewPrincipal("*"),
+				policy.NewActionSet(
+					policy.GetBucketLocationAction,
+					policy.ListBucketAction,
+					policy.GetObjectAction,
+					policy.ListAllMyBucketsAction,
+				),
+				policy.NewResourceSet(
+					policy.NewResource(bucket, ""),
+					policy.NewResource(bucket, "*"),
+				),
+				condition.NewFunctions(),
+			),
+		},
+	}, nil}
+
+func (a astrolabeObjects) DeleteBucketPolicy(context.Context, string) error {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) IsNotificationSupported() bool {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) IsListenBucketSupported() bool {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) IsEncryptionSupported() bool {
+	panic("implement me")
+}
+
+func (a astrolabeObjects) IsCompressionSupported() bool {
+	panic("implement me")
 }
