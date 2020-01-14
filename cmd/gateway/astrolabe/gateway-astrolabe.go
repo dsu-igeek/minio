@@ -13,6 +13,7 @@ import (
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
 	"io"
 	"net/http"
+	"time"
 
 	"github.com/vmware-tanzu/astrolabe/pkg/server"
 )
@@ -165,17 +166,46 @@ func (this astrolabeObjects) ListObjectsV2(ctx context.Context, bucket, prefix, 
 
 	}
 	for _, curPEID := range peids {
-		result.Objects = append(result.Objects, minio.ObjectInfo {
-			Name: curPEID.GetID(),
-		})
-		result.Objects = append(result.Objects, minio.ObjectInfo {
-			Name: curPEID.GetID() + ".md",
-		})
-		result.Objects = append(result.Objects, minio.ObjectInfo {
-			Name: curPEID.GetID() + ".zip",
-		})
+		pe, err := petm.GetProtectedEntity(ctx, curPEID)
+		if err == nil {
+			objectInfo, err := getObjectInfo(ctx, pe)
+			if err == nil {
+				result.Objects = append(result.Objects, gobjectInfo)
+				result.Objects = append(result.Objects, minio.ObjectInfo{
+					Name: curPEID.GetID() + ".md",
+				})
+				result.Objects = append(result.Objects, minio.ObjectInfo{
+					Name: curPEID.GetID() + ".zip",
+				})
+			}
+		}
 	}
 	return
+}
+
+func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity) (minio.ObjectInfo, error){
+	info, err := pe.GetInfo(ctx)
+	if err == nil {
+		return minio.ObjectInfo{
+			Bucket:          pe.GetID().GetPeType(),
+			Name:            pe.GetID().GetID(),
+			ModTime:         time.Time{},
+			Size:            info.,
+			IsDir:           false,
+			ETag:            "",
+			ContentType:     "",
+			ContentEncoding: "",
+			Expires:         time.Time{},
+			StorageClass:    "",
+			UserDefined:     nil,
+			Parts:           nil,
+			Writer:          nil,
+			Reader:          nil,
+			PutObjReader:    nil,
+			AccTime:         time.Time{},
+		}
+	}
+	return nil, err
 }
 
 func (a astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object string, rs *cmd.HTTPRangeSpec, h http.Header, lockType cmd.LockType, opts cmd.ObjectOptions) (reader *cmd.GetObjectReader, err error) {
