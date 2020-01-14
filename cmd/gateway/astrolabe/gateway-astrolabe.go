@@ -8,6 +8,7 @@ import (
 	"github.com/minio/minio/pkg/lifecycle"
 	"github.com/minio/minio/pkg/madmin"
 	"github.com/minio/minio/pkg/policy"
+	"github.com/minio/minio/pkg/policy/condition"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
 	"io"
 	"net/http"
@@ -158,8 +159,24 @@ func (a astrolabeObjects) ListObjects(ctx context.Context, bucket, prefix, marke
 	panic("implement me")
 }
 
-func (a astrolabeObjects) ListObjectsV2(ctx context.Context, bucket, prefix, continuationToken, delimiter string, maxKeys int, fetchOwner bool, startAfter string) (result cmd.ListObjectsV2Info, err error) {
-	panic("implement me")
+func (this astrolabeObjects) ListObjectsV2(ctx context.Context, bucket, prefix, continuationToken, delimiter string, maxKeys int, fetchOwner bool, startAfter string) (result cmd.ListObjectsV2Info, err error) {
+	petm := this.pem.GetProtectedEntityTypeManager(bucket)
+	peids, err := petm.GetProtectedEntities(ctx)
+	if err != nil {
+
+	}
+	for _, curPEID := range peids {
+		result.Objects = append(result.Objects, minio.ObjectInfo {
+			Name: curPEID.GetID(),
+		})
+		result.Objects = append(result.Objects, minio.ObjectInfo {
+			Name: curPEID.GetID() + ".md",
+		})
+		result.Objects = append(result.Objects, minio.ObjectInfo {
+			Name: curPEID.GetID() + ".zip",
+		})
+	}
+	return
 }
 
 func (a astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object string, rs *cmd.HTTPRangeSpec, h http.Header, lockType cmd.LockType, opts cmd.ObjectOptions) (reader *cmd.GetObjectReader, err error) {
@@ -251,9 +268,27 @@ func (a astrolabeObjects) SetBucketPolicy(context.Context, string, *policy.Polic
 	panic("implement me")
 }
 
-func (a astrolabeObjects) GetBucketPolicy(context.Context, string) (*policy.Policy, error) {
-	panic("implement me")
-}
+func (a astrolabeObjects) GetBucketPolicy(ctx context.Context, bucket string) (*policy.Policy, error) {
+	return &policy.Policy{
+		Version: policy.DefaultVersion,
+		Statements: []policy.Statement{
+			policy.NewStatement(
+				policy.Allow,
+				policy.NewPrincipal("*"),
+				policy.NewActionSet(
+					policy.GetBucketLocationAction,
+					policy.ListBucketAction,
+					policy.GetObjectAction,
+					policy.ListAllMyBucketsAction,
+				),
+				policy.NewResourceSet(
+					policy.NewResource(bucket, ""),
+					policy.NewResource(bucket, "*"),
+				),
+				condition.NewFunctions(),
+			),
+		},
+	}, nil}
 
 func (a astrolabeObjects) DeleteBucketPolicy(context.Context, string) error {
 	panic("implement me")
