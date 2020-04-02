@@ -3,7 +3,7 @@ module github.com/minio/minio
 go 1.16
 
 require (
-	cloud.google.com/go/storage v1.6.0
+	cloud.google.com/go/storage v1.10.0
 	git.apache.org/thrift.git v0.13.0
 	github.com/Azure/azure-pipeline-go v0.2.2
 	github.com/Azure/azure-storage-blob-go v0.10.0
@@ -22,7 +22,7 @@ require (
 	github.com/dswarbrick/smart v0.0.0-20190505152634-909a45200d6d
 	github.com/dustin/go-humanize v1.0.0
 	github.com/eclipse/paho.mqtt.golang v1.3.0
-	github.com/fatih/color v1.10.0
+	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
 	github.com/go-ldap/ldap/v3 v3.2.4
 	github.com/go-sql-driver/mysql v1.5.0
@@ -38,9 +38,9 @@ require (
 	github.com/klauspost/readahead v1.3.1
 	github.com/klauspost/reedsolomon v1.9.11
 	github.com/lib/pq v1.9.0
-	github.com/mattn/go-colorable v0.1.8
+	github.com/mattn/go-colorable v0.1.9
 	github.com/mattn/go-ieproxy v0.0.1 // indirect
-	github.com/mattn/go-isatty v0.0.12
+	github.com/mattn/go-isatty v0.0.14
 	github.com/miekg/dns v1.1.35
 	github.com/minio/cli v1.22.0
 	github.com/minio/highwayhash v1.0.2
@@ -70,7 +70,7 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/secure-io/sio-go v0.3.1
 	github.com/shirou/gopsutil/v3 v3.21.1
-	github.com/sirupsen/logrus v1.8.0
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/streadway/amqp v1.0.0
 	github.com/tidwall/gjson v1.6.8
@@ -84,10 +84,10 @@ require (
 	go.etcd.io/etcd v0.5.0-alpha.5.0.20200910180754-dd1b699fc489
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.uber.org/zap v1.17.0
-	golang.org/x/crypto v0.0.0-20210415154028-4f45737414dc
-	golang.org/x/net v0.0.0-20210405180319-a5a99cb37ef4
-	golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
-	google.golang.org/api v0.20.0
+	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
+	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023
+	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654
+	google.golang.org/api v0.30.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -106,4 +106,6 @@ replace github.com/mitchellh/mapstructure => github.com/mitchellh/mapstructure v
 // Version 1.2.0 adds support for go modules
 replace github.com/hashicorp/vault => github.com/hashicorp/vault v1.2.0-beta2
 
-replace github.com/vmware-tanzu/astrolabe => /home/dsmithuchida/gopath/src/github.com/vmware-tanzu/astrolabe
+replace github.com/vmware-tanzu/astrolabe => ../../vmware-tanzu/astrolabe
+
+replace github.com/vmware/gvddk => ../../vmware-tanzu/astrolabe/vendor/github.com/vmware/gvddk

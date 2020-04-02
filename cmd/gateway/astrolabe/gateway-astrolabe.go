@@ -13,6 +13,7 @@ import (
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/vmware-tanzu/astrolabe/pkg/server"
@@ -155,42 +156,51 @@ func (a astrolabeObjects) DeleteBucket(ctx context.Context, bucket string, force
 	panic("implement me")
 }
 
-func (a astrolabeObjects) ListObjects(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (result cmd.ListObjectsInfo, err error) {
-	panic("implement me")
-}
-
-func (this astrolabeObjects) ListObjectsV2(ctx context.Context, bucket, prefix, continuationToken, delimiter string, maxKeys int, fetchOwner bool, startAfter string) (result cmd.ListObjectsV2Info, err error) {
+func (this astrolabeObjects) listObjectInfo(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (results []minio.ObjectInfo, err error) {
 	petm := this.pem.GetProtectedEntityTypeManager(bucket)
+	if petm == nil {
+		// Set error to something reasonable
+		return
+	}
 	peids, err := petm.GetProtectedEntities(ctx)
 	if err != nil {
-
+		return
 	}
 	for _, curPEID := range peids {
 		pe, err := petm.GetProtectedEntity(ctx, curPEID)
 		if err == nil {
 			objectInfo, err := getObjectInfo(ctx, pe)
 			if err == nil {
-				result.Objects = append(result.Objects, gobjectInfo)
-				result.Objects = append(result.Objects, minio.ObjectInfo{
+				results = append(results, objectInfo)
+				results = append(results, minio.ObjectInfo{
 					Name: curPEID.GetID() + ".md",
 				})
-				result.Objects = append(result.Objects, minio.ObjectInfo{
+				results = append(results, minio.ObjectInfo{
 					Name: curPEID.GetID() + ".zip",
 				})
 			}
 		}
 	}
+}
+
+func (this astrolabeObjects) ListObjects(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (result cmd.ListObjectsInfo, err error) {
+	result.Objects, err = this.listObjectInfo(ctx, bucket, prefix, marker, delimiter, maxKeys)
 	return
 }
 
-func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity) (minio.ObjectInfo, error){
+func (this astrolabeObjects) ListObjectsV2(ctx context.Context, bucket, prefix, continuationToken, delimiter string, maxKeys int, fetchOwner bool, startAfter string) (result cmd.ListObjectsV2Info, err error) {
+	result.Objects, err = this.listObjectInfo(ctx, bucket, prefix, continuationToken, delimiter, maxKeys)
+	return
+}
+
+func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity) (objInfo minio.ObjectInfo, err error){
 	info, err := pe.GetInfo(ctx)
 	if err == nil {
-		return minio.ObjectInfo{
+		objInfo = minio.ObjectInfo{
 			Bucket:          pe.GetID().GetPeType(),
 			Name:            pe.GetID().GetID(),
 			ModTime:         time.Time{},
-			Size:            info.,
+			Size:            info.GetSize(),
 			IsDir:           false,
 			ETag:            "",
 			ContentType:     "",
@@ -205,19 +215,89 @@ func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity) (minio.Obj
 			AccTime:         time.Time{},
 		}
 	}
-	return nil, err
+	return
 }
 
-func (a astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object string, rs *cmd.HTTPRangeSpec, h http.Header, lockType cmd.LockType, opts cmd.ObjectOptions) (reader *cmd.GetObjectReader, err error) {
-	panic("implement me")
+func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object string, rs *cmd.HTTPRangeSpec, h http.Header, lockType cmd.LockType, opts cmd.ObjectOptions) (reader *cmd.GetObjectReader, err error) {
+	pe, err := this.getPEForBucketObject(ctx, bucket, object)
+	if err != nil {
+		err = minio.ErrorRespToObjectError(err, bucket, object)
+		return
+	}
+	var objInfo minio.ObjectInfo
+	objInfo, err = getObjectInfo(ctx, pe)
+	if err != nil {
+		return nil, minio.ErrorRespToObjectError(err, bucket, object)
+	}
+
+	var startOffset, length int64
+	startOffset, length, err = rs.GetOffsetLength(objInfo.Size)
+	if err != nil {
+		return nil, minio.ErrorRespToObjectError(err, bucket, object)
+	}
+
+	dr, err := pe.GetDataReader(ctx)
+	if err != nil {
+		return nil, minio.ErrorRespToObjectError(err, bucket, object)
+	}
+
+	pr, pw := io.Pipe()
+	go func() {
+		err := l.GetObject(ctx, bucket, object, startOffset, length, pw, objInfo.ETag, opts)
+		pw.CloseWithError(err)
+	}()
+	// Setup cleanup function to cause the above go-routine to
+	// exit in case of partial read
+	pipeCloser := func() { pr.Close() }
+	return minio.NewGetObjectReaderFromReader(pr, objInfo, opts.CheckCopyPrecondFn, pipeCloser)
 }
 
 func (a astrolabeObjects) GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts cmd.ObjectOptions) (err error) {
 	panic("implement me")
 }
 
-func (a astrolabeObjects) GetObjectInfo(ctx context.Context, bucket, object string, opts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
-	panic("implement me")
+func (this astrolabeObjects) GetObjectInfo(ctx context.Context, bucket, object string, opts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
+	pe, err := this.getPEForBucketObject(ctx, bucket, object)
+	if err != nil {
+		err = minio.ErrorRespToObjectError(err, bucket, object)
+		return
+	}
+	objInfo, err = getObjectInfo(ctx, pe)
+	return
+}
+
+func (this astrolabeObjects) getPEForBucketObject(ctx context.Context, bucket string, object string) (pe astrolabe.ProtectedEntity, err error) {
+	petm := this.pem.GetProtectedEntityTypeManager(bucket)
+	if petm == nil {
+		err = minio.BucketNotFound{
+			Bucket: bucket,
+			Object: object,
+		}
+		return
+	}
+	if strings.Contains(object, "/") {
+		err = minio.ObjectNotFound{
+			Bucket: bucket,
+			Object: object,
+		}
+		return
+	}
+	peidStr := object
+	if strings.Contains(peidStr, ".") {
+		if strings.HasSuffix(peidStr, ".md") {
+			peidStr = strings.TrimSuffix(peidStr, ".md")
+		}
+		if strings.HasSuffix(peidStr, ".zip") {
+			peidStr = strings.TrimSuffix(peidStr, ".zip")
+		}
+	}
+	peid, err := astrolabe.NewProtectedEntityIDFromString(peidStr)
+	if err != nil {
+		err = minio.ErrorRespToObjectError(err, bucket, object)
+		return
+	}
+	pe, err = petm.GetProtectedEntity(ctx, peid)
+	return
 }
 
 func (a astrolabeObjects) PutObject(ctx context.Context, bucket, object string, data *cmd.PutObjReader, opts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
