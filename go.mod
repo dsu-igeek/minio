@@ -6,6 +6,7 @@ require (
 	cloud.google.com/go v0.39.0
 	github.com/Azure/azure-pipeline-go v0.2.1
 	github.com/Azure/azure-storage-blob-go v0.8.0
+	github.com/Azure/go-autorest v14.0.0+incompatible // indirect
 	github.com/Shopify/sarama v1.24.1
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/alecthomas/participle v0.2.1
@@ -23,7 +24,6 @@ require (
 	github.com/elazarl/go-bindata-assetfs v1.0.0
 	github.com/fatih/color v1.7.0
 	github.com/fatih/structs v1.1.0
-	github.com/go-logfmt/logfmt v0.4.0 // indirect
 	github.com/go-ole/go-ole v1.2.4 // indirect
 	github.com/go-sql-driver/mysql v1.5.0
 	github.com/gomodule/redigo v2.0.0+incompatible
@@ -62,7 +62,6 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/pkg/profile v1.3.0
 	github.com/prometheus/client_golang v1.0.0
-	github.com/prometheus/tsdb v0.7.1 // indirect
 	github.com/rjeczalik/notify v0.9.2
 	github.com/rs/cors v1.6.0
 	github.com/secure-io/sio-go v0.3.0
