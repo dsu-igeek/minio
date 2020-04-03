@@ -181,6 +181,7 @@ func (this astrolabeObjects) listObjectInfo(ctx context.Context, bucket, prefix,
 			}
 		}
 	}
+	return
 }
 
 func (this astrolabeObjects) ListObjects(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (result cmd.ListObjectsInfo, err error) {
@@ -198,7 +199,7 @@ func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity) (objInfo m
 	if err == nil {
 		objInfo = minio.ObjectInfo{
 			Bucket:          pe.GetID().GetPeType(),
-			Name:            pe.GetID().GetID(),
+			Name:            pe.GetID().String(),
 			ModTime:         time.Time{},
 			Size:            info.GetSize(),
 			IsDir:           false,
@@ -230,8 +231,8 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 		return nil, minio.ErrorRespToObjectError(err, bucket, object)
 	}
 
-	var startOffset, length int64
-	startOffset, length, err = rs.GetOffsetLength(objInfo.Size)
+	var startOffset int64
+	startOffset, _, err = rs.GetOffsetLength(objInfo.Size)
 	if err != nil {
 		return nil, minio.ErrorRespToObjectError(err, bucket, object)
 	}
@@ -241,15 +242,16 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 		return nil, minio.ErrorRespToObjectError(err, bucket, object)
 	}
 
-	pr, pw := io.Pipe()
-	go func() {
-		err := l.GetObject(ctx, bucket, object, startOffset, length, pw, objInfo.ETag, opts)
-		pw.CloseWithError(err)
-	}()
+	if rs, ok := interface{}(dr).(io.Seeker); ok {
+		_, err := rs.Seek(startOffset, io.SeekStart)
+		if err != nil {
+			return nil, err
+		}
+	}
 	// Setup cleanup function to cause the above go-routine to
 	// exit in case of partial read
-	pipeCloser := func() { pr.Close() }
-	return minio.NewGetObjectReaderFromReader(pr, objInfo, opts.CheckCopyPrecondFn, pipeCloser)
+	drCloser := func() { dr.Close() }
+	return minio.NewGetObjectReaderFromReader(dr, objInfo, opts.CheckCopyPrecondFn, drCloser)
 }
 
 func (a astrolabeObjects) GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts cmd.ObjectOptions) (err error) {
