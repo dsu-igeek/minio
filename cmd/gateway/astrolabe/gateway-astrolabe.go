@@ -96,11 +96,18 @@ func (this *Astrolabe) Name() string {
 	return "astrolabe"
 }
 
+type astrolabeObjects struct {
+	minio.GatewayUnsupported
+	pem astrolabe.ProtectedEntityManager
+	logger *logrus.Logger
+}
+
 // NewGatewayLayer returns a new  ObjectLayer.
 func (this *Astrolabe) NewGatewayLayer(creds auth.Credentials) (cmd.ObjectLayer, error) {
 	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, nil, logrus.New())
 	return astrolabeObjects {
 		pem: dpem,
+		logger: logrus.New(),
 	}, nil
 }
 
@@ -109,10 +116,6 @@ func (this *Astrolabe)  Production() bool {
 	return false
 }
 
-type astrolabeObjects struct {
-	minio.GatewayUnsupported
-	pem astrolabe.ProtectedEntityManager
-}
 
 
 func (this astrolabeObjects) Shutdown(context context.Context) error {
@@ -167,18 +170,46 @@ func (this astrolabeObjects) listObjectInfo(ctx context.Context, bucket, prefix,
 		return
 	}
 	for _, curPEID := range peids {
+		results, err = this.appendObjectNamesForID(ctx, curPEID, results)
+		if err != nil {
+			this.logger.Errorf("Error retrieving names for %s:%v", curPEID.String(), err)
+			continue;
+		}
 		pe, err := petm.GetProtectedEntity(ctx, curPEID)
-		if err == nil {
-			objectInfo, err := getObjectInfo(ctx, pe)
-			if err == nil {
-				results = append(results, objectInfo)
-				results = append(results, minio.ObjectInfo{
-					Name: curPEID.GetID() + ".md",
-				})
-				results = append(results, minio.ObjectInfo{
-					Name: curPEID.GetID() + ".zip",
-				})
+		if err != nil {
+			this.logger.Errorf("Error retrieving protected entity for %s:%v", curPEID.String(), err)
+			continue
+		}
+		snapshots, err := pe.ListSnapshots(ctx)
+		if err != nil {
+			this.logger.Errorf("Error retrieving snapshots for %s:%v", curPEID.String(), err)
+			continue
+		}
+		for _, curSnapshotID := range snapshots {
+			snapshotPEID := curPEID.IDWithSnapshot(curSnapshotID)
+			results, err = this.appendObjectNamesForID(ctx, snapshotPEID, results)
+			if err != nil {
+				this.logger.Errorf("Error retrieving names for %s:%v", curPEID.String(), err)
+				continue;
 			}
+		}
+	}
+	return
+}
+
+func (this astrolabeObjects) appendObjectNamesForID(ctx context.Context, curPEID astrolabe.ProtectedEntityID, appendResults []minio.ObjectInfo) (results []minio.ObjectInfo, err error) {
+	results = appendResults
+	pe, err := this.pem.GetProtectedEntity(ctx, curPEID)
+	if err == nil {
+		objectInfo, err := getObjectInfo(ctx, pe)
+		if err == nil {
+			results = append(results, objectInfo)
+			results = append(results, minio.ObjectInfo{
+				Name: curPEID.GetID() + ".md",
+			})
+			results = append(results, minio.ObjectInfo{
+				Name: curPEID.GetID() + ".zip",
+			})
 		}
 	}
 	return
@@ -406,17 +437,17 @@ func (a astrolabeObjects) DeleteBucketPolicy(context.Context, string) error {
 }
 
 func (a astrolabeObjects) IsNotificationSupported() bool {
-	panic("implement me")
+	return false
 }
 
 func (a astrolabeObjects) IsListenBucketSupported() bool {
-	panic("implement me")
+	return false
 }
 
 func (a astrolabeObjects) IsEncryptionSupported() bool {
-	panic("implement me")
+	return false
 }
 
 func (a astrolabeObjects) IsCompressionSupported() bool {
-	panic("implement me")
+	return false
 }
