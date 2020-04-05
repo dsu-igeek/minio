@@ -201,14 +201,14 @@ func (this astrolabeObjects) appendObjectNamesForID(ctx context.Context, curPEID
 	results = appendResults
 	pe, err := this.pem.GetProtectedEntity(ctx, curPEID)
 	if err == nil {
-		objectInfo, err := getObjectInfo(ctx, pe)
+		objectInfo, err := getObjectInfo(ctx, pe, data)
 		if err == nil {
 			results = append(results, objectInfo)
 			results = append(results, minio.ObjectInfo{
-				Name: curPEID.GetID() + ".md",
+				Name: curPEID.String() + ".md",
 			})
 			results = append(results, minio.ObjectInfo{
-				Name: curPEID.GetID() + ".zip",
+				Name: curPEID.String() + ".zip",
 			})
 		}
 	}
@@ -225,14 +225,27 @@ func (this astrolabeObjects) ListObjectsV2(ctx context.Context, bucket, prefix, 
 	return
 }
 
-func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity) (objInfo minio.ObjectInfo, err error){
+func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity, style retrieveStyle) (objInfo minio.ObjectInfo, err error){
 	info, err := pe.GetInfo(ctx)
+	var size int64
+	var name string
+	switch style {
+	case data:
+		size = info.GetSize()
+		name = pe.GetID().String()
+	case md:
+		size = -1
+		name = pe.GetID().String() + ".md"
+	case zip:
+		size = -1
+		name = pe.GetID().String() + ".zip"
+	}
 	if err == nil {
 		objInfo = minio.ObjectInfo{
 			Bucket:          pe.GetID().GetPeType(),
-			Name:            pe.GetID().String(),
+			Name:            name,
 			ModTime:         time.Time{},
-			Size:            info.GetSize(),
+			Size:            size,
 			IsDir:           false,
 			ETag:            "",
 			ContentType:     "",
@@ -250,14 +263,15 @@ func getObjectInfo(ctx context.Context, pe astrolabe.ProtectedEntity) (objInfo m
 	return
 }
 
+
 func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object string, rs *cmd.HTTPRangeSpec, h http.Header, lockType cmd.LockType, opts cmd.ObjectOptions) (reader *cmd.GetObjectReader, err error) {
-	pe, err := this.getPEForBucketObject(ctx, bucket, object)
+	pe, style, err := this.getPEForBucketObject(ctx, bucket, object)
 	if err != nil {
 		err = minio.ErrorRespToObjectError(err, bucket, object)
 		return
 	}
 	var objInfo minio.ObjectInfo
-	objInfo, err = getObjectInfo(ctx, pe)
+	objInfo, err = getObjectInfo(ctx, pe, style)
 	if err != nil {
 		return nil, minio.ErrorRespToObjectError(err, bucket, object)
 	}
@@ -268,7 +282,18 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 		return nil, minio.ErrorRespToObjectError(err, bucket, object)
 	}
 
-	dr, err := pe.GetDataReader(ctx)
+	var dr io.ReadCloser
+
+	switch style {
+	case data:
+		dr, err = pe.GetDataReader(ctx)
+	case md:
+		dr, err = pe.GetMetadataReader(ctx)
+	case zip:
+		var dw io.WriteCloser
+		dr, dw = io.Pipe()
+		go this.zipPE(ctx, pe, dw)
+	}
 	if err != nil {
 		return nil, minio.ErrorRespToObjectError(err, bucket, object)
 	}
@@ -285,21 +310,28 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 	return minio.NewGetObjectReaderFromReader(dr, objInfo, opts.CheckCopyPrecondFn, drCloser)
 }
 
+func (this astrolabeObjects) zipPE(ctx context.Context, pe astrolabe.ProtectedEntity, writer io.WriteCloser) {
+	defer writer.Close()
+	err := astrolabe.ZipProtectedEntity(ctx, pe, writer)
+	if err != nil {
+		this.logger.Errorf("Failed to zip protected entity %s, err = %v", pe.GetID().String(), err)
+	}
+}
 func (a astrolabeObjects) GetObject(ctx context.Context, bucket, object string, startOffset int64, length int64, writer io.Writer, etag string, opts cmd.ObjectOptions) (err error) {
 	panic("implement me")
 }
 
 func (this astrolabeObjects) GetObjectInfo(ctx context.Context, bucket, object string, opts cmd.ObjectOptions) (objInfo cmd.ObjectInfo, err error) {
-	pe, err := this.getPEForBucketObject(ctx, bucket, object)
+	pe, style, err := this.getPEForBucketObject(ctx, bucket, object)
 	if err != nil {
 		err = minio.ErrorRespToObjectError(err, bucket, object)
 		return
 	}
-	objInfo, err = getObjectInfo(ctx, pe)
+	objInfo, err = getObjectInfo(ctx, pe, style)
 	return
 }
 
-func (this astrolabeObjects) getPEForBucketObject(ctx context.Context, bucket string, object string) (pe astrolabe.ProtectedEntity, err error) {
+func (this astrolabeObjects) getPEForBucketObject(ctx context.Context, bucket string, object string) (pe astrolabe.ProtectedEntity, style retrieveStyle, err error) {
 	petm := this.pem.GetProtectedEntityTypeManager(bucket)
 	if petm == nil {
 		err = minio.BucketNotFound{
@@ -316,20 +348,35 @@ func (this astrolabeObjects) getPEForBucketObject(ctx context.Context, bucket st
 		return
 	}
 	peidStr := object
-	if strings.Contains(peidStr, ".") {
-		if strings.HasSuffix(peidStr, ".md") {
-			peidStr = strings.TrimSuffix(peidStr, ".md")
-		}
-		if strings.HasSuffix(peidStr, ".zip") {
-			peidStr = strings.TrimSuffix(peidStr, ".zip")
-		}
-	}
-	peid, err := astrolabe.NewProtectedEntityIDFromString(peidStr)
+	peid, style, err := objectNameToPEID(peidStr)
 	if err != nil {
 		err = minio.ErrorRespToObjectError(err, bucket, object)
 		return
 	}
 	pe, err = petm.GetProtectedEntity(ctx, peid)
+	return
+}
+
+type retrieveStyle int
+const (
+	data retrieveStyle = iota
+	md = iota
+	zip = iota
+)
+
+func objectNameToPEID(peidStr string) (peid astrolabe.ProtectedEntityID, style retrieveStyle, err error) {
+	style = data
+	if strings.Contains(peidStr, ".") {
+		if strings.HasSuffix(peidStr, ".md") {
+			peidStr = strings.TrimSuffix(peidStr, ".md")
+			style = md
+		}
+		if strings.HasSuffix(peidStr, ".zip") {
+			peidStr = strings.TrimSuffix(peidStr, ".zip")
+			style = zip
+		}
+	}
+	peid, err = astrolabe.NewProtectedEntityIDFromString(peidStr)
 	return
 }
 
