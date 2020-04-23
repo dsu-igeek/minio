@@ -5,10 +5,7 @@ import (
 	"github.com/minio/cli"
 	"github.com/minio/minio/cmd"
 	"github.com/minio/minio/pkg/auth"
-	"github.com/minio/minio/pkg/lifecycle"
 	"github.com/minio/minio/pkg/madmin"
-	"github.com/minio/minio/pkg/policy"
-	"github.com/minio/minio/pkg/policy/condition"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
 	"io"
@@ -124,7 +121,7 @@ func (this astrolabeObjects) Shutdown(context context.Context) error {
 	return nil
 }
 
-func (this astrolabeObjects) StorageInfo(context context.Context) (si minio.StorageInfo) {
+func (this astrolabeObjects) StorageInfo(context context.Context, flag bool) (si minio.StorageInfo) {
 	si.Backend.Type = minio.BackendGateway
 	si.Backend.GatewayOnline = true		// Astrolabe may be talking to a number of different backends, so we won't track
 										// those individually
@@ -157,7 +154,7 @@ func bucketInfoForEntityManager(petm astrolabe.ProtectedEntityTypeManager) (buck
 	return
 }
 
-func (a astrolabeObjects) DeleteBucket(ctx context.Context, bucket string) error {
+func (a astrolabeObjects) DeleteBucket(ctx context.Context, bucket string, flag bool) error {
 	panic("implement me")
 }
 
@@ -309,7 +306,7 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 	// Setup cleanup function to cause the above go-routine to
 	// exit in case of partial read
 	drCloser := func() { dr.Close() }
-	return minio.NewGetObjectReaderFromReader(dr, objInfo, opts.CheckCopyPrecondFn, drCloser)
+	return minio.NewGetObjectReaderFromReader(dr, objInfo, cmd.ObjectOptions{}, drCloser)
 }
 
 func (this astrolabeObjects) zipPE(ctx context.Context, pe astrolabe.ProtectedEntity, writer io.WriteCloser) {
@@ -439,11 +436,7 @@ func (a astrolabeObjects) HealBucket(ctx context.Context, bucket string, dryRun,
 	panic("implement me")
 }
 
-func (a astrolabeObjects) HealObject(ctx context.Context, bucket, object string, dryRun, remove bool, scanMode madmin.HealScanMode) (madmin.HealResultItem, error) {
-	panic("implement me")
-}
-
-func (a astrolabeObjects) HealObjects(ctx context.Context, bucket, prefix string, healObjectFn func(string, string) error) error {
+func (a astrolabeObjects) HealObject(ctx context.Context, bucket, object string, scanMode madmin.HealOpts) (madmin.HealResultItem, error) {
 	panic("implement me")
 }
 
@@ -454,32 +447,6 @@ func (a astrolabeObjects) ListBucketsHeal(ctx context.Context) (buckets []cmd.Bu
 func (a astrolabeObjects) ListObjectsHeal(ctx context.Context, bucket, prefix, marker, delimiter string, maxKeys int) (result cmd.ListObjectsInfo, err error) {
 	panic("implement me")
 }
-
-func (a astrolabeObjects) SetBucketPolicy(context.Context, string, *policy.Policy) error {
-	panic("implement me")
-}
-
-func (a astrolabeObjects) GetBucketPolicy(ctx context.Context, bucket string) (*policy.Policy, error) {
-	return &policy.Policy{
-		Version: policy.DefaultVersion,
-		Statements: []policy.Statement{
-			policy.NewStatement(
-				policy.Allow,
-				policy.NewPrincipal("*"),
-				policy.NewActionSet(
-					policy.GetBucketLocationAction,
-					policy.ListBucketAction,
-					policy.GetObjectAction,
-					policy.ListAllMyBucketsAction,
-				),
-				policy.NewResourceSet(
-					policy.NewResource(bucket, ""),
-					policy.NewResource(bucket, "*"),
-				),
-				condition.NewFunctions(),
-			),
-		},
-	}, nil}
 
 func (a astrolabeObjects) DeleteBucketPolicy(context.Context, string) error {
 	panic("implement me")
@@ -499,18 +466,6 @@ func (a astrolabeObjects) IsEncryptionSupported() bool {
 
 func (a astrolabeObjects) IsCompressionSupported() bool {
 	return false
-}
-
-func (a astrolabeObjects) SetBucketLifecycle(context.Context, string, *lifecycle.Lifecycle) error {
-	panic("implement me")
-}
-
-func (a astrolabeObjects) GetBucketLifecycle(context.Context, string) (*lifecycle.Lifecycle, error) {
-	panic("implement me")
-}
-
-func (a astrolabeObjects) DeleteBucketLifecycle(context.Context, string) error {
-	panic("implement me")
 }
 
 func (a astrolabeObjects) GetMetrics(ctx context.Context) (*cmd.Metrics, error) {
