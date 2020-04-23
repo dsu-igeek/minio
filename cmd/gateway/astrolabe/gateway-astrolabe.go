@@ -6,8 +6,11 @@ import (
 	"github.com/minio/minio/cmd"
 	minio "github.com/minio/minio/cmd"
 	"github.com/minio/minio/pkg/auth"
+<<<<<<< HEAD
 	"github.com/minio/minio/pkg/bucket/policy"
 	"github.com/minio/minio/pkg/bucket/policy/condition"
+=======
+>>>>>>> 4cbf6f2d2... Updated to latest minio
 	"github.com/minio/minio/pkg/madmin"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
@@ -307,7 +310,7 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 	// Setup cleanup function to cause the above go-routine to
 	// exit in case of partial read
 	drCloser := func() { dr.Close() }
-	return minio.NewGetObjectReaderFromReader(dr, objInfo, opts.CheckCopyPrecondFn, drCloser)
+	return minio.NewGetObjectReaderFromReader(dr, objInfo, cmd.ObjectOptions{}, drCloser)
 }
 
 func (this astrolabeObjects) zipPE(ctx context.Context, pe astrolabe.ProtectedEntity, writer io.WriteCloser) {
@@ -453,32 +456,6 @@ func (a astrolabeObjects) ListObjectsHeal(ctx context.Context, bucket, prefix, v
 	panic("implement me")
 }
 
-func (a astrolabeObjects) SetBucketPolicy(context.Context, string, *policy.Policy) error {
-	panic("implement me")
-}
-
-func (a astrolabeObjects) GetBucketPolicy(ctx context.Context, bucket string) (*policy.Policy, error) {
-	return &policy.Policy{
-		Version: policy.DefaultVersion,
-		Statements: []policy.Statement{
-			policy.NewStatement(
-				policy.Allow,
-				policy.NewPrincipal("*"),
-				policy.NewActionSet(
-					policy.GetBucketLocationAction,
-					policy.ListBucketAction,
-					policy.GetObjectAction,
-					policy.ListAllMyBucketsAction,
-				),
-				policy.NewResourceSet(
-					policy.NewResource(bucket, ""),
-					policy.NewResource(bucket, "*"),
-				),
-				condition.NewFunctions(),
-			),
-		},
-	}, nil}
-
 func (a astrolabeObjects) DeleteBucketPolicy(context.Context, string) error {
 	panic("implement me")
 }
@@ -498,3 +475,4 @@ func (a astrolabeObjects) IsEncryptionSupported() bool {
 func (a astrolabeObjects) IsCompressionSupported() bool {
 	return false
 }
+
