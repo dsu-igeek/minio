@@ -106,7 +106,7 @@ type astrolabeObjects struct {
 
 // NewGatewayLayer returns a new  ObjectLayer.
 func (this *Astrolabe) NewGatewayLayer(creds auth.Credentials) (cmd.ObjectLayer, error) {
-	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, "")
+	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir)
 	return astrolabeObjects {
 		pem: dpem,
 		logger: logrus.New(),

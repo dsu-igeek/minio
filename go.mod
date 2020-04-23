@@ -11,7 +11,7 @@ require (
 	github.com/StackExchange/wmi v0.0.0-20190523213315-cbe66965904d // indirect
 	github.com/alecthomas/participle v0.2.1
 	github.com/aliyun/aliyun-oss-go-sdk v0.0.0-20190307165228-86c17b95fcd5
-	github.com/aws/aws-sdk-go v1.29.19
+	github.com/aws/aws-sdk-go v1.29.33
 	github.com/bcicen/jstream v0.0.0-20190220045926-16c1f8af81c2
 	github.com/beevik/ntp v0.2.0
 	github.com/cheggaaa/pb v1.0.28
@@ -32,14 +32,13 @@ require (
 	github.com/gorilla/rpc v1.2.0+incompatible
 	github.com/hashicorp/vault/api v1.0.4
 	github.com/inconshreveable/go-update v0.0.0-20160112193335-8152e7eb6ccf
-	github.com/json-iterator/go v1.1.8
-	github.com/klauspost/compress v1.9.5
+	github.com/json-iterator/go v1.1.9
+	github.com/klauspost/compress v1.10.3
 	github.com/klauspost/pgzip v1.2.1
 	github.com/klauspost/readahead v1.3.1
 	github.com/klauspost/reedsolomon v1.9.3
-	github.com/kurin/blazer v0.5.4-0.20190613185654-cf2f27cc0be3
-	github.com/lib/pq v1.1.1
-	github.com/mattn/go-ieproxy v0.0.0-20190805055040-f9202b1cfdeb // indirect
+	github.com/kurin/blazer v0.5.4-0.20200327014341-8f90a40f8af7
+	github.com/lib/pq v1.2.0
 	github.com/miekg/dns v1.1.8
 	github.com/minio/cli v1.22.0
 	github.com/minio/gokrb5/v7 v7.2.5
@@ -49,11 +48,12 @@ require (
 	github.com/minio/lsync v1.0.1
 	github.com/minio/mc v0.0.0-20191012041914-735aa139b19c
 	github.com/minio/minio-go v0.0.0-20190327203652-5325257a208f
-	github.com/minio/minio-go/v6 v6.0.39
-	github.com/minio/parquet-go v0.0.0-20190318185229-9d767baf1679
+	github.com/minio/minio-go/v6 v6.0.53
+	github.com/minio/parquet-go v0.0.0-20200414234858-838cfa8aae61
 	github.com/minio/sha256-simd v0.1.1
 	github.com/minio/sio v0.2.0
 	github.com/mitchellh/go-homedir v1.1.0
+	github.com/mmcloughlin/avo v0.0.0-20200303042253-6df701fe672f // indirect
 	github.com/nats-io/nats-server/v2 v2.1.2
 	github.com/nats-io/nats.go v1.9.1
 	github.com/nats-io/stan.go v0.4.5
@@ -65,15 +65,15 @@ require (
 	github.com/rjeczalik/notify v0.9.2
 	github.com/rs/cors v1.6.0
 	github.com/secure-io/sio-go v0.3.0
-	github.com/shirou/gopsutil v2.18.12+incompatible
-	github.com/sirupsen/logrus v1.4.2
+	github.com/shirou/gopsutil v2.20.3-0.20200314133625-53cec6b37e6a+incompatible
+	github.com/sirupsen/logrus v1.5.0
 	github.com/skyrings/skyring-common v0.0.0-20160929130248-d1c0bb1cbd5e
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
 	github.com/vmware-tanzu/astrolabe v0.0.0-00010101000000-000000000000
 	go.uber.org/atomic v1.4.0
 	golang.org/x/crypto v0.0.0-20200311171314-f7b00557c8c4
-	golang.org/x/sys v0.0.0-20200302150141-5c8b2ff67527
+	golang.org/x/sys v0.0.0-20200323222414-85ca7c5b95cd
 	google.golang.org/api v0.5.0
 	gopkg.in/ldap.v3 v3.0.3
 	gopkg.in/olivere/elastic.v5 v5.0.80
