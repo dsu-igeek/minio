@@ -7,7 +7,6 @@ require (
 	git.apache.org/thrift.git v0.13.0
 	github.com/Azure/azure-pipeline-go v0.2.2
 	github.com/Azure/azure-storage-blob-go v0.10.0
-	github.com/Azure/go-autorest/autorest/adal v0.9.13 // indirect
 	github.com/Shopify/sarama v1.27.2
 	github.com/VividCortex/ewma v1.1.1
 	github.com/alecthomas/participle v0.2.1
@@ -25,12 +24,9 @@ require (
 	github.com/eclipse/paho.mqtt.golang v1.3.0
 	github.com/fatih/color v1.13.0
 	github.com/fatih/structs v1.1.0
-	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
 	github.com/go-ldap/ldap/v3 v3.2.4
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/gomodule/redigo v1.8.3
-	github.com/google/go-cmp v0.5.6 // indirect
 	github.com/google/uuid v1.1.2
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
@@ -74,12 +70,14 @@ require (
 	github.com/rs/cors v1.7.0
 	github.com/secure-io/sio-go v0.3.1
 	github.com/shirou/gopsutil/v3 v3.21.1
+	github.com/sirupsen/logrus v1.8.1
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/streadway/amqp v1.0.0
 	github.com/tidwall/gjson v1.6.8
 	github.com/tidwall/sjson v1.0.4
 	github.com/tinylib/msgp v1.1.3
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
+	github.com/vmware-tanzu/astrolabe v0.0.0-00010101000000-000000000000
 	github.com/willf/bitset v1.1.11 // indirect
 	github.com/willf/bloom v2.0.3+incompatible
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
@@ -88,12 +86,8 @@ require (
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
 	golang.org/x/net v0.0.0-20210520170846-37e1c6afe023
-	golang.org/x/oauth2 v0.0.0-20210819190943-2bc19b11175f // indirect
 	golang.org/x/sys v0.0.0-20211019181941-9d821ace8654
-	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.30.0
-	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/genproto v0.0.0-20210828152312-66f60bf46e71 // indirect
 	gopkg.in/yaml.v2 v2.4.0
 )
 
@@ -114,4 +108,12 @@ replace github.com/hashicorp/vault => github.com/hashicorp/vault v1.2.0-beta2
 
 replace github.com/vmware-tanzu/astrolabe => ../../vmware-tanzu/astrolabe
 
-replace github.com/vmware/gvddk => ../../vmware-tanzu/astrolabe/vendor/github.com/vmware/gvddk
+replace github.com/vmware-tanzu/velero => ../../vmware-tanzu/velero
+
+replace google.golang.org/grpc => google.golang.org/grpc v1.29.0
+
+replace github.com/dsu-igeek/astrolabe-demo => ../../dsu-igeek/astrolabe-demo
+
+replace github.com/vmware-tanzu/velero-plugin-for-aws => ../../vmware-tanzu/velero-plugin-for-aws
+
+replace github.com/vmware-tanzu/astrolabe-velero => ../../vmware-tanzu/astrolabe-velero

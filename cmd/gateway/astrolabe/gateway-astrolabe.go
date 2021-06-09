@@ -6,11 +6,6 @@ import (
 	"github.com/minio/minio/cmd"
 	minio "github.com/minio/minio/cmd"
 	"github.com/minio/minio/pkg/auth"
-<<<<<<< HEAD
-	"github.com/minio/minio/pkg/bucket/policy"
-	"github.com/minio/minio/pkg/bucket/policy/condition"
-=======
->>>>>>> 4cbf6f2d2... Updated to latest minio
 	"github.com/minio/minio/pkg/madmin"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
@@ -107,7 +102,8 @@ type astrolabeObjects struct {
 
 // NewGatewayLayer returns a new  ObjectLayer.
 func (this *Astrolabe) NewGatewayLayer(creds auth.Credentials) (cmd.ObjectLayer, error) {
-	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, nil, logrus.New())
+	addOnInits := make(map[string]server.InitFunc)
+	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, addOnInits, logrus.New())
 	return astrolabeObjects {
 		pem: dpem,
 		logger: logrus.New(),
@@ -315,7 +311,7 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 
 func (this astrolabeObjects) zipPE(ctx context.Context, pe astrolabe.ProtectedEntity, writer io.WriteCloser) {
 	defer writer.Close()
-	err := astrolabe.ZipProtectedEntity(ctx, pe, writer)
+	err := astrolabe.ZipProtectedEntityToWriter(ctx, pe, writer)
 	if err != nil {
 		this.logger.Errorf("Failed to zip protected entity %s, err = %v", pe.GetID().String(), err)
 	}
