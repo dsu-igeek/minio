@@ -8,6 +8,9 @@ import (
 	"github.com/minio/minio/pkg/madmin"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
+	kubernetes "github.com/vmware-tanzu/astrolabe-velero/pkg/k8sns"
+	ebs_astrolabe "github.com/vmware-tanzu/velero-plugin-for-aws/pkg/ebs-astrolabe"
+	"github.com/dsu-igeek/astrolabe-demo/pkg/psql"
 	"io"
 	"net/http"
 	"strings"
@@ -103,7 +106,11 @@ type astrolabeObjects struct {
 
 // NewGatewayLayer returns a new  ObjectLayer.
 func (this *Astrolabe) NewGatewayLayer(creds auth.Credentials) (cmd.ObjectLayer, error) {
-	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir)
+	addOnInits := make(map[string]server.InitFunc)
+	addOnInits["psql"] = psql.NewPSQLProtectedEntityTypeManager
+	addOnInits["ebs"] = ebs_astrolabe.NewEBSProtectedEntityTypeManager
+	addOnInits["k8sns"] = kubernetes.NewKubernetesNamespaceProtectedEntityTypeManagerFromConfig
+	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, addOnInits, logrus.New())
 	return astrolabeObjects {
 		pem: dpem,
 		logger: logrus.New(),
@@ -311,7 +318,7 @@ func (this astrolabeObjects) GetObjectNInfo(ctx context.Context, bucket, object 
 
 func (this astrolabeObjects) zipPE(ctx context.Context, pe astrolabe.ProtectedEntity, writer io.WriteCloser) {
 	defer writer.Close()
-	err := astrolabe.ZipProtectedEntity(ctx, pe, writer)
+	err := astrolabe.ZipProtectedEntityToWriter(ctx, pe, writer)
 	if err != nil {
 		this.logger.Errorf("Failed to zip protected entity %s, err = %v", pe.GetID().String(), err)
 	}
