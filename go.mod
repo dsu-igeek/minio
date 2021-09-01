@@ -86,7 +86,7 @@ require (
 	github.com/streadway/amqp v0.0.0-20190404075320-75d898a42a94
 	github.com/tinylib/msgp v1.1.2
 	github.com/valyala/tcplisten v0.0.0-20161114210144-ceec8f93295a
-	github.com/vmware-tanzu/astrolabe v0.3.0
+	github.com/vmware-tanzu/astrolabe v0.4.0
 	github.com/vmware-tanzu/astrolabe-velero v0.0.0-00010101000000-000000000000
 	github.com/vmware-tanzu/velero-plugin-for-aws v0.0.0-00010101000000-000000000000
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
@@ -125,5 +125,7 @@ replace google.golang.org/grpc => google.golang.org/grpc v1.29.0
 replace github.com/dsu-igeek/astrolabe-demo => ../../dsu-igeek/astrolabe-demo
 
 replace github.com/vmware-tanzu/velero-plugin-for-aws => ../../vmware-tanzu/velero-plugin-for-aws
+
+replace github.com/vmware-tanzu/velero-plugin-for-vsphere => ../../vmware-tanzu/velero-plugin-for-vsphere
 
 replace github.com/vmware-tanzu/astrolabe-velero => ../../vmware-tanzu/astrolabe-velero
