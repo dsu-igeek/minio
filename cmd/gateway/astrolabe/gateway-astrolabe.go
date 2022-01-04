@@ -9,6 +9,12 @@ import (
 	"github.com/minio/minio/pkg/madmin"
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
+	"github.com/vmware-tanzu/astrolabe/pkg/plugin"
+)
+<<<<<<< HEAD
+=======
+	"github.com/vmware-tanzu/astrolabe/pkg/plugin"
+>>>>>>> 5556fe6a2... Working on Astrolabe plugins
 	"io"
 	"net/http"
 	"strings"
@@ -18,7 +24,8 @@ import (
 )
 
 type Astrolabe struct {
-	confDir string
+	confDir    string
+	pluginsDir string
 }
 
 func init() {
@@ -83,6 +90,7 @@ func astrolabeGatewayMain(ctx *cli.Context) {
 
 	astrolabeObjects := Astrolabe {
 		confDir: ctx.Args().First(),
+		pluginsDir: ctx.Args().Second(),
 	}
 
 	minio.StartGateway(ctx, &astrolabeObjects)
@@ -102,8 +110,12 @@ type astrolabeObjects struct {
 
 // NewGatewayLayer returns a new  ObjectLayer.
 func (this *Astrolabe) NewGatewayLayer(creds auth.Credentials) (cmd.ObjectLayer, error) {
-	addOnInits := make(map[string]server.InitFunc)
-	dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, addOnInits, logrus.New())
+	//addOnInits := make(map[string]server.InitFunc)
+	//dpem := server.NewDirectProtectedEntityManagerFromConfigDir(this.confDir, addOnInits, logrus.New())
+	dpem, err := plugin.NewPluginProtectedEntityManagerFromConfigDir(this.confDir, this.pluginsDir, logrus.New())
+	if err != nil {
+		return nil, err
+	}
 	return astrolabeObjects {
 		pem: dpem,
 		logger: logrus.New(),
