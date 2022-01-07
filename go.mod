@@ -81,7 +81,7 @@ require (
 	github.com/willf/bitset v1.1.11 // indirect
 	github.com/willf/bloom v2.0.3+incompatible
 	github.com/xdg/scram v0.0.0-20180814205039-7eeb5667e42c
-	go.etcd.io/etcd v0.5.0-alpha.5.0.20200910180754-dd1b699fc489
+	go.etcd.io/etcd/api/v3 v3.5.1
 	go.etcd.io/etcd/client/v3 v3.5.1
 	go.uber.org/zap v1.17.0
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5
@@ -109,8 +109,6 @@ replace github.com/hashicorp/vault => github.com/hashicorp/vault v1.2.0-beta2
 replace github.com/vmware-tanzu/astrolabe => ../../vmware-tanzu/astrolabe
 
 replace github.com/vmware-tanzu/velero => ../../vmware-tanzu/velero
-
-replace google.golang.org/grpc => google.golang.org/grpc v1.29.0
 
 replace github.com/dsu-igeek/astrolabe-demo => ../../dsu-igeek/astrolabe-demo
 

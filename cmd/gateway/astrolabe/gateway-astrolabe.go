@@ -10,17 +10,10 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/vmware-tanzu/astrolabe/pkg/astrolabe"
 	"github.com/vmware-tanzu/astrolabe/pkg/plugin"
-)
-<<<<<<< HEAD
-=======
-	"github.com/vmware-tanzu/astrolabe/pkg/plugin"
->>>>>>> 5556fe6a2... Working on Astrolabe plugins
 	"io"
 	"net/http"
 	"strings"
 	"time"
-
-	"github.com/vmware-tanzu/astrolabe/pkg/server"
 )
 
 type Astrolabe struct {
@@ -90,7 +83,7 @@ func astrolabeGatewayMain(ctx *cli.Context) {
 
 	astrolabeObjects := Astrolabe {
 		confDir: ctx.Args().First(),
-		pluginsDir: ctx.Args().Second(),
+		pluginsDir: ctx.Args().Get(1),
 	}
 
 	minio.StartGateway(ctx, &astrolabeObjects)

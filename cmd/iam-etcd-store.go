@@ -35,8 +35,8 @@ import (
 	iampolicy "github.com/minio/minio/pkg/iam/policy"
 	"github.com/minio/minio/pkg/kms"
 	"github.com/minio/minio/pkg/madmin"
+	mvccpb "go.etcd.io/etcd/api/v3/mvccpb"
 	etcd "go.etcd.io/etcd/client/v3"
-	"go.etcd.io/etcd/mvcc/mvccpb"
 )
 
 var defaultContextTimeout = 30 * time.Second
